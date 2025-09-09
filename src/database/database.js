@@ -4,6 +4,10 @@ const config = require('../config.js');
 const { StatusCodeError } = require('../endpointHelper.js');
 const { Role } = require('../model/model.js');
 const dbModel = require('./dbModel.js');
+
+// This avoids having the default user on GitHub
+const { getDefaultPassword, getDefaultEmail, getDefaultName } = require("../getSecretData.js");
+
 class DB {
   constructor() {
     this.initialized = this.initializeDatabase();
@@ -90,6 +94,7 @@ class DB {
         params.push(`name='${name}'`);
       }
       if (params.length > 0) {
+        // TODO: Remove the string injection, use the '?' instead
         const query = `UPDATE user SET ${params.join(', ')} WHERE id=${userId}`;
         await this.query(connection, query);
       }
@@ -134,6 +139,7 @@ class DB {
     const connection = await this.getConnection();
     try {
       const offset = this.getOffset(page, config.db.listPerPage);
+      // TODO: Remove the string injection, use the '?' instead
       const orders = await this.query(connection, `SELECT id, franchiseId, storeId, date FROM dinerOrder WHERE dinerId=? LIMIT ${offset},${config.db.listPerPage}`, [user.id]);
       for (const order of orders) {
         let items = await this.query(connection, `SELECT id, menuId, description, price FROM orderItem WHERE orderId=?`, [order.id]);
@@ -210,6 +216,7 @@ class DB {
     nameFilter = nameFilter.replace(/\*/g, '%');
 
     try {
+      // TODO: Remove the string injection, use the '?' instead
       let franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ${limit + 1} OFFSET ${offset}`, [nameFilter]);
 
       const more = franchises.length > limit;
@@ -239,6 +246,7 @@ class DB {
       }
 
       franchiseIds = franchiseIds.map((v) => v.objectId);
+      // TODO: Remove the string injection, use the '?' instead
       const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
       for (const franchise of franchises) {
         await this.getFranchise(franchise);
@@ -299,6 +307,7 @@ class DB {
   }
 
   async getID(connection, key, value, table) {
+    // TODO: Remove the string injection, use the '?' instead
     const [rows] = await connection.execute(`SELECT id FROM ${table} WHERE ${key}=?`, [value]);
     if (rows.length > 0) {
       return rows[0].id;
@@ -321,6 +330,7 @@ class DB {
       decimalNumbers: true,
     });
     if (setUse) {
+      // TODO: Remove the string injection, use the '?' instead
       await connection.query(`USE ${config.db.connection.database}`);
     }
     return connection;
@@ -333,6 +343,7 @@ class DB {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(dbExists ? 'Database exists' : 'Database does not exist, creating it');
 
+        // TODO: Remove the string injection, use the '?' instead
         await connection.query(`CREATE DATABASE IF NOT EXISTS ${config.db.connection.database}`);
         await connection.query(`USE ${config.db.connection.database}`);
 
@@ -345,7 +356,7 @@ class DB {
         }
 
         if (!dbExists) {
-          const defaultAdmin = { name: '常用名字', email: 'a@jwt.com', password: 'admin', roles: [{ role: Role.Admin }] };
+          const defaultAdmin = { name: getDefaultName(), email: getDefaultEmail(), password: getDefaultPassword(), roles: [{ role: Role.Admin }] };
           this.addUser(defaultAdmin);
         }
       } finally {
