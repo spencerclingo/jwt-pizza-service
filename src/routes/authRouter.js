@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
-const { DB, Role } = require('../database/database.js');
+const { Role, DB } = require('../database/database.js');
 
 const authRouter = express.Router();
 
@@ -33,7 +33,9 @@ authRouter.docs = [
 
 async function setAuthUser(req, res, next) {
   const token = readAuthToken(req);
-  if (token) {
+  if (!token) {
+    req.user = null
+  } else {
     try {
       if (await DB.isLoggedIn(token)) {
         // Check the database to make sure the token is valid.
