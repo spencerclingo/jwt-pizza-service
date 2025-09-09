@@ -1,5 +1,5 @@
 const express = require('express');
-const { DB, Role } = require('../database/database.js');
+const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { StatusCodeError, asyncHandler } = require('../endpointHelper.js');
 
@@ -31,7 +31,7 @@ franchiseRouter.docs = [
   },
   {
     method: 'DELETE',
-    path: '/api/franchise/:franchiseId',
+    path: '/api/franchise/:franchiseId/delete',
     requiresAuth: true,
     description: `Delete a franchises`,
     example: `curl -X DELETE localhost:3000/api/franchise/1 -H 'Authorization: Bearer tttttt'`,
@@ -47,7 +47,7 @@ franchiseRouter.docs = [
   },
   {
     method: 'DELETE',
-    path: '/api/franchise/:franchiseId/store/:storeId',
+    path: '/api/franchise/:franchiseId/store/:storeId/delete',
     requiresAuth: true,
     description: `Delete a store`,
     example: `curl -X DELETE localhost:3000/api/franchise/1/store/1  -H 'Authorization: Bearer tttttt'`,
@@ -95,8 +95,10 @@ franchiseRouter.post(
 
 // deleteFranchise
 franchiseRouter.delete(
-  '/:franchiseId',
+  '/:franchiseId/delete',
+  authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+      // TODO: This needs to check to make sure the user can delete a franchise
     const franchiseId = Number(req.params.franchiseId);
     await DB.deleteFranchise(franchiseId);
     res.json({ message: 'franchise deleted' });
@@ -120,7 +122,7 @@ franchiseRouter.post(
 
 // deleteStore
 franchiseRouter.delete(
-  '/:franchiseId/store/:storeId',
+  '/:franchiseId/store/:storeId/delete',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const franchiseId = Number(req.params.franchiseId);
