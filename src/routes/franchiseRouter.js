@@ -34,7 +34,7 @@ franchiseRouter.docs = [
     path: '/api/franchise/:franchiseId/delete',
     requiresAuth: true,
     description: `Delete a franchises`,
-    example: `curl -X DELETE localhost:3000/api/franchise/1 -H 'Authorization: Bearer tttttt'`,
+    example: `curl -X DELETE localhost:3000/api/franchise/1/delete -H 'Authorization: Bearer tttttt'`,
     response: { message: 'franchise deleted' },
   },
   {
@@ -50,7 +50,7 @@ franchiseRouter.docs = [
     path: '/api/franchise/:franchiseId/store/:storeId/delete',
     requiresAuth: true,
     description: `Delete a store`,
-    example: `curl -X DELETE localhost:3000/api/franchise/1/store/1  -H 'Authorization: Bearer tttttt'`,
+    example: `curl -X DELETE localhost:3000/api/franchise/1/store/1/delete  -H 'Authorization: Bearer tttttt'`,
     response: { message: 'store deleted' },
   },
 ];
@@ -98,7 +98,7 @@ franchiseRouter.delete(
   '/:franchiseId/delete',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-      // TODO: This needs to check to make sure the user can delete a franchise
+      // TODO: This needs to check to make sure the user is allowed to delete the franchise
     const franchiseId = Number(req.params.franchiseId);
     await DB.deleteFranchise(franchiseId);
     res.json({ message: 'franchise deleted' });

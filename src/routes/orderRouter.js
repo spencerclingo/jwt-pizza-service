@@ -68,6 +68,7 @@ orderRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+      // TODO: Does this require being an admin?
     res.json(await DB.getOrders(req.user, req.query.page));
   })
 );
@@ -78,6 +79,7 @@ orderRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
+    // TODO: If any of these fail, they all need reverted so as not to have an unfulfilled order in the DB
     const order = await DB.addDinerOrder(req.user, orderReq);
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: 'POST',

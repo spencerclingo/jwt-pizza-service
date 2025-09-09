@@ -34,6 +34,7 @@ authRouter.docs = [
 async function setAuthUser(req, res, next) {
   const token = readAuthToken(req);
   if (!token) {
+    console.log('No token provided');
     req.user = null
   } else {
     try {
@@ -41,8 +42,11 @@ async function setAuthUser(req, res, next) {
         // Check the database to make sure the token is valid.
         req.user = jwt.verify(token, config.jwtSecret);
         req.user.isRole = (role) => !!req.user.roles.find((r) => r.role === role);
+        console.log("token should be good");
+        console.log(req.user);
       }
     } catch {
+      console.log("Something wrong with the token")
       req.user = null;
     }
   }

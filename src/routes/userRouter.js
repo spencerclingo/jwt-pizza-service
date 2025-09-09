@@ -1,6 +1,6 @@
 const express = require('express');
 const { asyncHandler } = require('../endpointHelper.js');
-const { DB, Role } = require('../database/database.js');
+const { Role, DB } = require('../database/database.js');
 const { authRouter, setAuth } = require('./authRouter.js');
 
 const userRouter = express.Router();
@@ -34,6 +34,11 @@ userRouter.get(
 );
 
 // updateUser
+// This function allows overwriting of a user's username, email, and password in one go.
+// All someone needs is another user's authToken, so make sure there is no way to access
+// another user's auth token.
+// Also, does not update req.user so the username and email are old.
+// TODO: Fix req.user somehow
 userRouter.put(
   '/:userId',
   authRouter.authenticateToken,
@@ -50,5 +55,7 @@ userRouter.put(
     res.json({ user: updatedUser, token: auth });
   })
 );
+
+// TODO: Add a middleware function somewhere to determine if someone has admin access to do admin things
 
 module.exports = userRouter;
