@@ -5,8 +5,12 @@ const { StatusCodeError } = require('../endpointHelper.js');
 const { Role } = require('../model/model.js');
 const dbModel = require('./dbModel.js');
 
+
+
 // This avoids having the default user on GitHub
 const { getDefaultPassword, getDefaultEmail, getDefaultName } = require("../getSecretData.js");
+const path = require("path");
+const {exec} = require("node:child_process");
 
 class DB {
   constructor() {
@@ -358,6 +362,34 @@ class DB {
         if (!dbExists) {
           const defaultAdmin = { name: getDefaultName(), email: getDefaultEmail(), password: getDefaultPassword(), roles: [{ role: Role.Admin }] };
           this.addUser(defaultAdmin);
+
+          // If the db is empty, we want to populate it. These only work if the server is started in Git Bash
+          const { exec } = require('node:child_process')
+          const path = require('path');
+
+          // This finds the script's absolute path from the location of the current file
+          const scriptPath = path.join(__dirname, '../../scripts', 'generatePizzaData.sh');
+          const normalizedPath = scriptPath
+              .replace(/\\/g, '/')
+              .replace(/^C:/, '/c');
+
+          exec(`chmod +x ${normalizedPath}`, (err, output) => {
+            if (err) {
+              console.error("could not execute command: ", err)
+              return
+            }
+            console.log("Output: \n", output)
+          })
+
+          exec(`bash ${normalizedPath} localhost:3000`, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`Script failed with exit code ${error.code}`);
+              console.error(`stdout: ${stdout}`);
+              console.error(`stderr: ${stderr}`);
+              return;
+            }
+            console.log(`Script output: ${stdout}`);
+          });
         }
       } finally {
         connection.end();

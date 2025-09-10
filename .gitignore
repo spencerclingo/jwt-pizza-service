@@ -5,8 +5,8 @@ config.js
 coverage
 dist
 /.idea/.gitignore
-/generatePizzaData.sh
 /src/getSecretData.js
 /.idea/jwt-pizza-service.iml
 /.idea/modules.xml
 /.idea/vcs.xml
+/scripts/generatePizzaData.sh
