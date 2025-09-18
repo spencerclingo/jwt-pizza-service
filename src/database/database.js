@@ -5,13 +5,6 @@ const { StatusCodeError } = require('../endpointHelper.js');
 const { Role } = require('../model/model.js');
 const dbModel = require('./dbModel.js');
 
-
-
-// This avoids having the default user on GitHub
-const { getDefaultPassword, getDefaultEmail, getDefaultName } = require("../getSecretData.js");
-const path = require("path");
-const {exec} = require("node:child_process");
-
 class DB {
   constructor() {
     this.initialized = this.initializeDatabase();
@@ -360,12 +353,13 @@ class DB {
         }
 
         if (!dbExists) {
-          const defaultAdmin = { name: getDefaultName(), email: getDefaultEmail(), password: getDefaultPassword(), roles: [{ role: Role.Admin }] };
-          this.addUser(defaultAdmin);
+          // This avoids having the default user on GitHub
+          const { getDefaultPassword, getDefaultEmail, getDefaultName } = require("../getSecretData.js");
+          const path = require("path");
+          const {exec} = require("node:child_process");
 
-          // If the db is empty, we want to populate it. These only work if the server is started in Git Bash
-          const { exec } = require('node:child_process')
-          const path = require('path');
+          const defaultAdmin = { name: getDefaultName(), email: getDefaultEmail(), password: getDefaultPassword(), roles: [{ role: Role.Admin }] };
+          await this.addUser(defaultAdmin);
 
           // This finds the script's absolute path from the location of the current file
           const scriptPath = path.join(__dirname, '../../scripts', 'generatePizzaData.sh');

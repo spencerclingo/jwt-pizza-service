@@ -31,10 +31,10 @@ franchiseRouter.docs = [
   },
   {
     method: 'DELETE',
-    path: '/api/franchise/:franchiseId/delete',
+    path: '/api/franchise/:franchiseId',
     requiresAuth: true,
     description: `Delete a franchises`,
-    example: `curl -X DELETE localhost:3000/api/franchise/1/delete -H 'Authorization: Bearer tttttt'`,
+    example: `curl -X DELETE localhost:3000/api/franchise/1 -H 'Authorization: Bearer tttttt'`,
     response: { message: 'franchise deleted' },
   },
   {
@@ -47,10 +47,10 @@ franchiseRouter.docs = [
   },
   {
     method: 'DELETE',
-    path: '/api/franchise/:franchiseId/store/:storeId/delete',
+    path: '/api/franchise/:franchiseId/store/:storeId',
     requiresAuth: true,
     description: `Delete a store`,
-    example: `curl -X DELETE localhost:3000/api/franchise/1/store/1/delete  -H 'Authorization: Bearer tttttt'`,
+    example: `curl -X DELETE localhost:3000/api/franchise/1/store/1  -H 'Authorization: Bearer tttttt'`,
     response: { message: 'store deleted' },
   },
 ];
@@ -95,7 +95,7 @@ franchiseRouter.post(
 
 // deleteFranchise
 franchiseRouter.delete(
-  '/:franchiseId/delete',
+  '/:franchiseId',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
       // TODO: This needs to check to make sure the user is allowed to delete the franchise
@@ -111,7 +111,9 @@ franchiseRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const franchiseId = Number(req.params.franchiseId);
+    console.log("franchiseId from req: ",franchiseId)
     const franchise = await DB.getFranchise({ id: franchiseId });
+    console.log("franchise: ",franchise);
     if (!franchise || (!req.user.isRole(Role.Admin) && !franchise.admins.some((admin) => admin.id === req.user.id))) {
       throw new StatusCodeError('unable to create a store', 403);
     }
@@ -122,7 +124,7 @@ franchiseRouter.post(
 
 // deleteStore
 franchiseRouter.delete(
-  '/:franchiseId/store/:storeId/delete',
+  '/:franchiseId/store/:storeId',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const franchiseId = Number(req.params.franchiseId);

@@ -68,7 +68,6 @@ orderRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-      // TODO: Does this require being an admin?
     res.json(await DB.getOrders(req.user, req.query.page));
   })
 );
@@ -79,7 +78,12 @@ orderRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
+    if (orderReq.items.length > 20) {
+        res.status(500).send({ message: 'The ovens are full, please order fewer pizzas.'});
+        return;
+    }
     // TODO: If any of these fail, they all need reverted so as not to have an unfulfilled order in the DB
+    // TODO: Make it a big transaction, example in deleting a franchise
     const order = await DB.addDinerOrder(req.user, orderReq);
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: 'POST',
