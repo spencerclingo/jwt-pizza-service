@@ -46,7 +46,7 @@ jobs:
                 host: '127.0.0.1',
                 user: 'root',
                 password: 'tempdbpassword',
-                database: 'pizza',
+                database: 'pizza_test_db',
                 connectTimeout: 60000,
               },
               listPerPage: 10,
@@ -55,6 +55,11 @@ jobs:
               url: 'https://pizza-factory.cs329.click',
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
+            adminData: {
+              name: ${{ secrets.ADMIN_NAME }},
+              email: ${{ secrets.ADMIN_EMAIL }},
+              password: ${{ secrets.ADMIN_PASSWORD }}
+            }
           };" > src/config.js
 
       - name: Tests
