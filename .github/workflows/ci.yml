@@ -56,9 +56,9 @@ jobs:
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
             adminData: {
-              name: ${{ secrets.ADMIN_NAME }},
-              email: ${{ secrets.ADMIN_EMAIL }},
-              password: ${{ secrets.ADMIN_PASSWORD }}
+              name: '${{ secrets.ADMIN_NAME }}',
+              email: '${{ secrets.ADMIN_EMAIL }}',
+              password: '${{ secrets.ADMIN_PASSWORD }}'
             }
           };" > src/config.js
 
