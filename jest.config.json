@@ -1,0 +1,11 @@
+{
+  "collectCoverage": true,
+  "coverageReporters": ["json-summary", "text"],
+  "coverageThreshold": {
+    "global": {
+      "lines": 80
+    }
+  },
+  "setupFilesAfterEnv": ["./tests/config/setupTests.js"],
+  "globalTeardown": "./tests/config/globalTeardown.js"
+}

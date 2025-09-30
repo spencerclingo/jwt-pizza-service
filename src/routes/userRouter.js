@@ -35,10 +35,11 @@ userRouter.get(
 
 // updateUser
 // This function allows overwriting of a user's username, email, and password in one go.
-// All someone needs is another user's authToken, so make sure there is no way to access
-// another user's auth token.
+// All you need is an auth token, doesn't even need to match the userID.
+// If you have an auth token, you can change someone else's user just by accessing this endpoint
 // Also, does not update req.user so the username and email are old.
 // TODO: Fix req.user somehow
+// TODO: Verify that the auth token matches the userID for security
 userRouter.put(
   '/:userId',
   authRouter.authenticateToken,

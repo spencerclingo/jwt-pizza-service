@@ -5,33 +5,38 @@ const { StatusCodeError } = require('../endpointHelper.js');
 const { Role } = require('../model/model.js');
 const dbModel = require('./dbModel.js');
 
+let dbName = config.db.connection.database;
+
 class DB {
   constructor() {
     this.initialized = this.initializeDatabase();
   }
 
-  async getMenu() {
-    const connection = await this.getConnection();
+  async getMenu(connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const rows = await this.query(connection, `SELECT * FROM menu`);
       return rows;
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async addMenuItem(item) {
-    const connection = await this.getConnection();
+  async addMenuItem(item, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const addResult = await this.query(connection, `INSERT INTO menu (title, description, image, price) VALUES (?, ?, ?, ?)`, [item.title, item.description, item.image, item.price]);
       return { ...item, id: addResult.insertId };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async addUser(user) {
-    const connection = await this.getConnection();
+  async addUser(user, connection = null) {
+    const defaultConnection = connection == null;
+    if (defaultConnection) connection = await this.getConnection(connection);
     try {
       const hashedPassword = await bcrypt.hash(user.password, 10);
 
@@ -40,7 +45,7 @@ class DB {
       for (const role of user.roles) {
         switch (role.role) {
           case Role.Franchisee: {
-            const franchiseId = await this.getID(connection, 'name', role.object, 'franchise');
+            const franchiseId = await this.getID(connection, 'name', Role.Franchisee, 'franchise');
             await this.query(connection, `INSERT INTO userRole (userId, role, objectId) VALUES (?, ?, ?)`, [userId, role.role, franchiseId]);
             break;
           }
@@ -52,12 +57,13 @@ class DB {
       }
       return { ...user, id: userId, password: undefined };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async getUser(email, password) {
-    const connection = await this.getConnection();
+  async getUser(email, password, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const userResult = await this.query(connection, `SELECT * FROM user WHERE email=?`, [email]);
       const user = userResult[0];
@@ -67,76 +73,86 @@ class DB {
 
       const roleResult = await this.query(connection, `SELECT * FROM userRole WHERE userId=?`, [user.id]);
       const roles = roleResult.map((r) => {
-        return { objectId: r.objectId || undefined, role: r.role };
+        return { objectId: r.objectId ?? undefined, role: r.role };
       });
 
       return { ...user, roles: roles, password: undefined };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async updateUser(userId, name, email, password) {
-    const connection = await this.getConnection();
+  async updateUser(userId, name, email, password, connection = null) {
+    // TODO: This function is extremely insecure on its own because if you can guess someone's userID,
+    //  you can change all of their information.
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const params = [];
+      const values = []
       if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
-        params.push(`password='${hashedPassword}'`);
+        params.push(`password=?`);
+        values.push(hashedPassword)
       }
       if (email) {
-        params.push(`email='${email}'`);
+        params.push(`email=?`);
+        values.push(email);
       }
       if (name) {
-        params.push(`name='${name}'`);
+        params.push(`name=?`);
+        values.push(name);
       }
+      values.push(userId);
       if (params.length > 0) {
-        // TODO: Remove the string injection, use the '?' instead
-        const query = `UPDATE user SET ${params.join(', ')} WHERE id=${userId}`;
-        await this.query(connection, query);
+        // This line was susceptible to SQL injection by setting userId = "1 OR 1=1" to update all users
+        await this.query(connection, `UPDATE user SET ${params.join(', ')} WHERE id=?`, values);
       }
-      return this.getUser(email, password);
+      return this.getUser(email, password); // Don't pass a connection because this queries instead of updates
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async loginUser(userId, token) {
+  async loginUser(userId, token, connection = null) {
     token = this.getTokenSignature(token);
-    const connection = await this.getConnection();
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       await this.query(connection, `INSERT INTO auth (token, userId) VALUES (?, ?) ON DUPLICATE KEY UPDATE token=token`, [token, userId]);
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async isLoggedIn(token) {
+  async isLoggedIn(token, connection = null) {
     token = this.getTokenSignature(token);
-    const connection = await this.getConnection();
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const authResult = await this.query(connection, `SELECT userId FROM auth WHERE token=?`, [token]);
       return authResult.length > 0;
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async logoutUser(token) {
+  async logoutUser(token, connection = null) {
     token = this.getTokenSignature(token);
-    const connection = await this.getConnection();
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       await this.query(connection, `DELETE FROM auth WHERE token=?`, [token]);
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async getOrders(user, page = 1) {
-    const connection = await this.getConnection();
+  async getOrders(user, page = 1, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const offset = this.getOffset(page, config.db.listPerPage);
-      // TODO: Remove the string injection, use the '?' instead
       const orders = await this.query(connection, `SELECT id, franchiseId, storeId, date FROM dinerOrder WHERE dinerId=? LIMIT ${offset},${config.db.listPerPage}`, [user.id]);
       for (const order of orders) {
         let items = await this.query(connection, `SELECT id, menuId, description, price FROM orderItem WHERE orderId=?`, [order.id]);
@@ -144,12 +160,13 @@ class DB {
       }
       return { dinerId: user.id, orders: orders, page };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async addDinerOrder(user, order) {
-    const connection = await this.getConnection();
+  async addDinerOrder(user, order, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const orderResult = await this.query(connection, `INSERT INTO dinerOrder (dinerId, franchiseId, storeId, date) VALUES (?, ?, ?, now())`, [user.id, order.franchiseId, order.storeId]);
       const orderId = orderResult.insertId;
@@ -159,12 +176,13 @@ class DB {
       }
       return { ...order, id: orderId };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async createFranchise(franchise) {
-    const connection = await this.getConnection();
+  async createFranchise(franchise, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       for (const admin of franchise.admins) {
         const adminUser = await this.query(connection, `SELECT id, name FROM user WHERE email=?`, [admin.email]);
@@ -184,12 +202,13 @@ class DB {
 
       return franchise;
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async deleteFranchise(franchiseId) {
-    const connection = await this.getConnection();
+  async deleteFranchise(franchiseId, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       await connection.beginTransaction();
       try {
@@ -202,12 +221,13 @@ class DB {
         throw new StatusCodeError('unable to delete franchise', 500);
       }
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async getFranchises(authUser, page = 0, limit = 10, nameFilter = '*') {
-    const connection = await this.getConnection();
+  async getFranchises(authUser, page = 0, limit = 10, nameFilter = '*', connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
 
     const offset = page * limit;
     nameFilter = nameFilter.replace(/\*/g, '%');
@@ -223,6 +243,7 @@ class DB {
 
       for (const franchise of franchises) {
         if (authUser?.isRole(Role.Admin)) {
+          // I don't understand the purpose of this function call
           await this.getFranchise(franchise);
         } else {
           franchise.stores = await this.query(connection, `SELECT id, name FROM store WHERE franchiseId=?`, [franchise.id]);
@@ -230,12 +251,13 @@ class DB {
       }
       return [franchises, more];
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async getUserFranchises(userId) {
-    const connection = await this.getConnection();
+  async getUserFranchises(userId, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       let franchiseIds = await this.query(connection, `SELECT objectId FROM userRole WHERE role='franchisee' AND userId=?`, [userId]);
       if (franchiseIds.length === 0) {
@@ -243,19 +265,20 @@ class DB {
       }
 
       franchiseIds = franchiseIds.map((v) => v.objectId);
-      // TODO: Remove the string injection, use the '?' instead
       const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
       for (const franchise of franchises) {
+        // I don't understand the purpose of this function call
         await this.getFranchise(franchise);
       }
       return franchises;
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async getFranchise(franchise) {
-    const connection = await this.getConnection();
+  async getFranchise(franchise, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       franchise.admins = await this.query(connection, `SELECT u.id, u.name, u.email FROM userRole AS ur JOIN user AS u ON u.id=ur.userId WHERE ur.objectId=? AND ur.role='franchisee'`, [franchise.id]);
 
@@ -263,26 +286,28 @@ class DB {
 
       return franchise;
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async createStore(franchiseId, store) {
-    const connection = await this.getConnection();
+  async createStore(franchiseId, store, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       const insertResult = await this.query(connection, `INSERT INTO store (franchiseId, name) VALUES (?, ?)`, [franchiseId, store.name]);
       return { id: insertResult.insertId, franchiseId, name: store.name };
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
-  async deleteStore(franchiseId, storeId) {
-    const connection = await this.getConnection();
+  async deleteStore(franchiseId, storeId, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
     try {
       await this.query(connection, `DELETE FROM store WHERE franchiseId=? AND id=?`, [franchiseId, storeId]);
     } finally {
-      connection.end();
+      if (defaultConnection) connection.end();
     }
   }
 
@@ -304,7 +329,6 @@ class DB {
   }
 
   async getID(connection, key, value, table) {
-    // TODO: Remove the string injection, use the '?' instead
     const [rows] = await connection.execute(`SELECT id FROM ${table} WHERE ${key}=?`, [value]);
     if (rows.length > 0) {
       return rows[0].id;
@@ -312,37 +336,37 @@ class DB {
     throw new Error('No ID found');
   }
 
-  async getConnection() {
+  async getConnection(connection = null) {
     // Make sure the database is initialized before trying to get a connection.
     await this.initialized;
-    return this._getConnection();
+    return this._getConnection(connection);
   }
 
-  async _getConnection(setUse = true) {
-    const connection = await mysql.createConnection({
-      host: config.db.connection.host,
-      user: config.db.connection.user,
-      password: config.db.connection.password,
-      connectTimeout: config.db.connection.connectTimeout,
-      decimalNumbers: true,
-    });
+  async _getConnection(connection = null, setUse = true) {
+    if (connection == null) {
+      connection = await mysql.createConnection({
+        host: config.db.connection.host,
+        user: config.db.connection.user,
+        password: config.db.connection.password,
+        connectTimeout: config.db.connection.connectTimeout,
+        decimalNumbers: true,
+      });
+    }
     if (setUse) {
-      // TODO: Remove the string injection, use the '?' instead
-      await connection.query(`USE ${config.db.connection.database}`);
+      await connection.query(`USE ${dbName}`);
     }
     return connection;
   }
 
   async initializeDatabase() {
     try {
-      const connection = await this._getConnection(false);
+      const connection = await this._getConnection(null, false);
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(dbExists ? 'Database exists' : 'Database does not exist, creating it');
 
-        // TODO: Remove the string injection, use the '?' instead
-        await connection.query(`CREATE DATABASE IF NOT EXISTS ${config.db.connection.database}`);
-        await connection.query(`USE ${config.db.connection.database}`);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName}`);
+        await connection.query(`USE ${dbName}`);
 
         if (!dbExists) {
           console.log('Successfully created database');
@@ -353,13 +377,11 @@ class DB {
         }
 
         if (!dbExists) {
-          // This avoids having the default user on GitHub
-          const { getDefaultPassword, getDefaultEmail, getDefaultName } = require("../getSecretData.js");
           const path = require("path");
           const {exec} = require("node:child_process");
 
-          const defaultAdmin = { name: getDefaultName(), email: getDefaultEmail(), password: getDefaultPassword(), roles: [{ role: Role.Admin }] };
-          await this.addUser(defaultAdmin);
+          const defaultAdmin = { name: config.adminData.name, email: config.adminData.email, password: config.adminData.password, roles: [{ role: Role.Admin }] };
+          await this.addUser(defaultAdmin, connection);
 
           // This finds the script's absolute path from the location of the current file
           const scriptPath = path.join(__dirname, '../../scripts', 'generatePizzaData.sh');
@@ -368,16 +390,16 @@ class DB {
               .replace(/^C:/, '/c');
 
           exec(`chmod +x ${normalizedPath}`, (err, output) => {
-            if (err) {
+            if (err && process.env.NODE_ENV !== 'test') {
               console.error("could not execute command: ", err)
               return
             }
             console.log("Output: \n", output)
           })
 
-          exec(`bash ${normalizedPath} localhost:3000`, (error, stdout, stderr) => {
-            if (error) {
-              console.error(`Script failed with exit code ${error.code}`);
+          exec(`bash ${normalizedPath} localhost:3000`, (err, stdout, stderr) => {
+            if (err && process.env.NODE_ENV !== 'test') {
+              console.error(`Script failed with exit code ${err.code}`);
               console.error(`stdout: ${stdout}`);
               console.error(`stderr: ${stderr}`);
               return;
@@ -394,7 +416,7 @@ class DB {
   }
 
   async checkDatabaseExists(connection) {
-    const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [config.db.connection.database]);
+    const [rows] = await connection.execute(`SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [dbName]);
     return rows.length > 0;
   }
 }
