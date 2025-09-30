@@ -39,6 +39,7 @@ describe('franchiseRouter tests', () => {
         delete res.body.admins[0].id;
 
         expect(res.body.admins).toEqual(defaultFranchise.admins);
+        expect(res.body.id).toBe(numFranchises + 1);
         expect(res.body.name).toBe(defaultFranchise.name);
 
         await request(app).delete(`/api/franchise/${res.body.id}`).set('Authorization', `Bearer ${adminUserAuthToken}`).send(adminUser);
