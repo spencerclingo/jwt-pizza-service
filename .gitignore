@@ -5,7 +5,6 @@
 coverage
 dist
 /.idea/.gitignore
-/src/getSecretData.js
 /.idea/jwt-pizza-service.iml
 /.idea/modules.xml
 /.idea/vcs.xml
