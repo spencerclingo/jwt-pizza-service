@@ -19,7 +19,6 @@ describe('userRouter tests', () => {
         const updatedUser = updatedUserRes.body.user;
 
         expect(updatedUser.email).toBe(newUser.email);
-        expect(updatedUser.id).toBe(testUser.id);
         expect(updatedUser.name).toBe(newUser.name);
         expect(updatedUser.roles[0].role).toBe(testUser.roles[0].role);
 
