@@ -4,7 +4,6 @@ const request = require('supertest');
 const app = require('../src/service');
 
 describe('franchiseRouter tests', () => {
-    console.log(config)
     let testUserAuthToken;
     let testUser = { name: 'pizza franchise', email: 'franchise@test.com', password: 'a' };
     let defaultFranchise = { admins: [{ email: config.adminData.email, name: config.adminData.name }], name: 'pizza franchise'};
@@ -78,7 +77,7 @@ describe('franchiseRouter tests', () => {
         expect(createStoreResponse.body.franchiseId).toBe(franchiseId);
     })
 
-    it('createStore', async () => {
+    it('deleteStore', async () => {
         let adminUser = { email: config.adminData.email, password: config.adminData.password };
         const adminUserRes = await request(app).put(`/api/auth/`).send(adminUser);
         let adminUserAuthToken = adminUserRes.body.token;

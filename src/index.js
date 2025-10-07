@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 const app = require('./service.js');
 
 const port = process.argv[2] || 3000;

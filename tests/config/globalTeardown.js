@@ -1,5 +1,3 @@
-require('dotenv').config({ path: './.env' });
-
 const { DB } = require('../../src/database/database.js');
 
 // Export an async function for Jest to run

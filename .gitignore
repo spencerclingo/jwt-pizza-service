@@ -1,7 +1,6 @@
 **/node_modules
 **/.DS_Store
 .vscode
-.env
 coverage
 dist
 /.idea/.gitignore
@@ -9,3 +8,4 @@ dist
 /.idea/modules.xml
 /.idea/vcs.xml
 /scripts/generatePizzaData.sh
+/src/config.js

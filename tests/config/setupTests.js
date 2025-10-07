@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 jest.mock('../../src/config.js', () => {
     const originalModule = jest.requireActual('../../src/config.js');
 
