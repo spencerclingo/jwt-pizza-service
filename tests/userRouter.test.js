@@ -39,7 +39,6 @@ describe('userRouter tests', () => {
 
         const userListRes = await request(app).delete(`/api/user/${user.id}`).set('Authorization', `Bearer ${loginRes.body.token}`).send();
 
-        console.log(userListRes.body);
         expect(userListRes.status).toBe(200);
         expect(userListRes.body.users.map((user) => user.name)).not.toContain("admin_full_name_unique");
     })
