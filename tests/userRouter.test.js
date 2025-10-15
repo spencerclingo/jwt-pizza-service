@@ -14,8 +14,8 @@ describe('userRouter tests', () => {
     let testUserAuthToken;
     let testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 
-
     beforeAll(async () => {
+        await DB.initialized;
         testUser.email = Math.random().toString(36).substring(2, 12) + '@test.com';
         const registerRes = await request(app).post('/api/auth').send(testUser);
         testUserAuthToken = registerRes.body.token;

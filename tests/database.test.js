@@ -26,6 +26,7 @@ describe('Database Tests', function() {
     let connection;
     let db = DB;
     beforeEach(async () => {
+        await db.initialized;
         connection = await db.getConnection();
         await connection.query('SET autocommit = 0');
         await connection.beginTransaction();

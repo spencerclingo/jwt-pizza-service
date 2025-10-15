@@ -433,7 +433,7 @@ class DB {
               .replace(/\\/g, '/')
               .replace(/^C:/, '/c');
 
-          exec(`chmod +x ${normalizedPath}`, (err, output) => {
+          await exec(`chmod +x ${normalizedPath}`, (err, output) => {
             if (err && process.env.NODE_ENV !== 'test') {
               console.error("could not execute command: ", err)
               return
@@ -441,7 +441,7 @@ class DB {
             console.log("Output: \n", output)
           })
 
-          exec(`bash ${normalizedPath} localhost:3000`, (err, stdout, stderr) => {
+          await exec(`bash ${normalizedPath} localhost:3000`, (err, stdout, stderr) => {
             if (err && process.env.NODE_ENV !== 'test') {
               console.error(`Script failed with exit code ${err.code}`);
               console.error(`stdout: ${stdout}`);

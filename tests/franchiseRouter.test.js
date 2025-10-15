@@ -2,6 +2,7 @@ const config = require("../src/config");
 
 const request = require('supertest');
 const app = require('../src/service');
+const {DB} = require("../src/database/database");
 
 describe('franchiseRouter tests', () => {
     let testUserAuthToken;
@@ -9,6 +10,7 @@ describe('franchiseRouter tests', () => {
     let defaultFranchise = { admins: [{ email: config.adminData.email, name: config.adminData.name }], name: 'pizza franchise'};
 
     beforeAll(async () => {
+        await DB.initialized;
         const registerRes = await request(app).post('/api/auth').send(testUser);
         testUserAuthToken = registerRes.body.token;
         testUser = registerRes.body.user;

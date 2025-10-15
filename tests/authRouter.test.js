@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../src/service');
+const {DB} = require("../src/database/database");
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 
@@ -7,6 +8,7 @@ describe('authRouter tests', () => {
     let testUserAuthToken;
 
     beforeAll(async () => {
+        await DB.initialized;
         testUser.email = Math.random().toString(36).substring(2, 12) + '@test.com';
         const registerRes = await request(app).post('/api/auth').send(testUser);
         testUserAuthToken = registerRes.body.token;
