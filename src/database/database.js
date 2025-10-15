@@ -233,8 +233,11 @@ class DB {
     nameFilter = nameFilter.replace(/\*/g, '%');
 
     try {
-      // TODO: Remove the string injection, use the '?' instead
-      let franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ${limit + 1} OFFSET ${offset}`, [nameFilter]);
+      // /api/franchise?limit=0%3B%20SET%20FOREIGN_KEY_CHECKS%3D0%3B%20DROP%20TABLE%20IF%20EXISTS%20users%3B%20DROP%20TABLE%20IF%20EXISTS%20franchise%3B%20DROP%20TABLE%20IF%20EXISTS%20userrole%3B%20--
+      // will SQL inject and drop the users, franchise, userrole table on the original query without the parsing
+      const integerLimit = parseInt(limit, 10) + 1;
+      const integerOffset = parseInt(offset, 10);
+      let franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ${integerLimit} OFFSET ${integerOffset}`, [nameFilter]);
 
       const more = franchises.length > limit;
       if (more) {
@@ -250,6 +253,35 @@ class DB {
         }
       }
       return [franchises, more];
+    } finally {
+      if (defaultConnection) connection.end();
+    }
+  }
+
+  async getUsers(page = 0, limit = 10, nameFilter = '*', connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
+
+    const offset = page * limit;
+    nameFilter = nameFilter.replace(/\*/g, '%');
+
+    try {
+      const integerLimit = parseInt(limit, 10) + 1;
+      const integerOffset = parseInt(offset, 10);
+      let users = await this.query(connection, `
+            SELECT user.id, user.name, user.email, GROUP_CONCAT(userrole.role SEPARATOR ', ') AS roles 
+            FROM user
+            JOIN userrole ON userrole.userId = user.id
+            WHERE user.name LIKE ?
+            GROUP BY user.id, user.name, user.email
+            LIMIT ${integerLimit} OFFSET ${integerOffset}`,
+          [nameFilter]);
+
+      const more = users.length > limit;
+      if (more) {
+        users = users.slice(0, limit);
+      }
+      return [users, more];
     } finally {
       if (defaultConnection) connection.end();
     }
@@ -310,6 +342,17 @@ class DB {
       if (defaultConnection) connection.end();
     }
   }
+
+  async deleteUser(userId, connection = null) {
+    const defaultConnection = connection == null;
+    connection = await this.getConnection(connection);
+    try {
+      await this.query(connection, `DELETE FROM user WHERE id=?`, [userId]);
+    } finally {
+      if (defaultConnection) connection.end();
+    }
+  }
+
 
   getOffset(currentPage = 1, listPerPage) {
     return (currentPage - 1) * [listPerPage];
