@@ -271,7 +271,7 @@ class DB {
       let users = await this.query(connection, `
             SELECT user.id, user.name, user.email, GROUP_CONCAT(userrole.role SEPARATOR ', ') AS roles 
             FROM user
-            JOIN userrole ON userrole.userId = user.id
+            LEFT JOIN userrole ON userrole.userId = user.id
             WHERE user.name LIKE ?
             GROUP BY user.id, user.name, user.email
             LIMIT ${integerLimit} OFFSET ${integerOffset}`,
