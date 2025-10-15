@@ -1,5 +1,14 @@
 const request = require('supertest');
 const app = require('../src/service');
+const { DB } = require('../src/database/database.js');
+const {Role} = require("../src/model/model");
+
+const adminUser = {
+    password: "password",
+    name: "admin_full_name_unique",
+    email: "email",
+    roles: [{ role: Role.Admin }],
+}
 
 describe('userRouter tests', () => {
     let testUserAuthToken;
@@ -22,5 +31,15 @@ describe('userRouter tests', () => {
         expect(updatedUser.name).toBe(newUser.name);
         expect(updatedUser.roles[0].role).toBe(testUser.roles[0].role);
 
+    });
+
+    it('delete user', async () => {
+        const user = await DB.addUser(adminUser);
+        const loginRes = await request(app).put('/api/auth').send(user);
+
+        const userListRes = await request(app).delete(`/api/user/${user.id}`).set('Authorization', `Bearer ${loginRes.body.token}`).send();
+
+        expect(userListRes.status).toBe(200);
+        expect(userListRes.body.users.map((user) => user.name)).not.toContain("admin_full_name_unique");
     })
 })
