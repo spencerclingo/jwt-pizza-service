@@ -233,7 +233,7 @@ class DB {
     nameFilter = nameFilter.replace(/\*/g, '%');
 
     try {
-      // /api/franchise?limit=0%3B%20SET%20FOREIGN_KEY_CHECKS%3D0%3B%20DROP%20TABLE%20IF%20EXISTS%20users%3B%20DROP%20TABLE%20IF%20EXISTS%20franchise%3B%20DROP%20TABLE%20IF%20EXISTS%20userrole%3B%20--
+      // /api/franchise?limit=0%3B%20SET%20FOREIGN_KEY_CHECKS%3D0%3B%20DROP%20TABLE%20IF%20EXISTS%20users%3B%20DROP%20TABLE%20IF%20EXISTS%20franchise%3B%20DROP%20TABLE%20IF%20EXISTS%20userRole%3B%20--
       // will SQL inject and drop the users, franchise, userrole table on the original query without the parsing
       const integerLimit = parseInt(limit, 10) + 1;
       const integerOffset = parseInt(offset, 10);
@@ -269,9 +269,9 @@ class DB {
       const integerLimit = parseInt(limit, 10) + 1;
       const integerOffset = parseInt(offset, 10);
       let users = await this.query(connection, `
-            SELECT user.id, user.name, user.email, GROUP_CONCAT(userrole.role SEPARATOR ', ') AS roles 
+            SELECT user.id, user.name, user.email, GROUP_CONCAT(userRole.role SEPARATOR ', ') AS roles 
             FROM user
-            LEFT JOIN userrole ON userrole.userId = user.id
+            LEFT JOIN userRole ON userRole.userId = user.id
             WHERE user.name LIKE ?
             GROUP BY user.id, user.name, user.email
             LIMIT ${integerLimit} OFFSET ${integerOffset}`,
