@@ -109,7 +109,7 @@ userRouter.delete(
             return res.status(403).json({ message: 'unauthorized' });
         }
         await DB.deleteUser(req.params.userId);
-        const [users, more] = await DB.getUsers(req.query.page, req.query.limit, req.query.name);
+        const [users, more] = await DB.getUsers();
         res.json({ users, more });
     })
 )
