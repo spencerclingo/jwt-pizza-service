@@ -7,7 +7,7 @@ jest.mock('../../src/config.js', () => {
             ...originalModule.db,
             connection: {
                 ...originalModule.db.connection,
-                database: 'pizza_test_db',
+                database: 'pizzatest',
             },
         },
     };
