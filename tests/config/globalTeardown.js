@@ -7,7 +7,7 @@ module.exports = async () => {
         connection = await DB.getConnection();
 
         console.log('\nDropping test database...');
-        await connection.query(`DROP SCHEMA IF EXISTS pizzaTest`);
+        await connection.query(`DROP SCHEMA IF EXISTS pizza_test_db`);
         console.log('✅ Test database dropped.');
 
     } catch (error) {

@@ -344,6 +344,7 @@ class DB {
   }
 
   async deleteUser(userId, connection = null) {
+    console.log(dbName)
     const defaultConnection = connection == null;
     connection = await this.getConnection(connection);
     try {
