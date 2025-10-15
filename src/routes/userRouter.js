@@ -108,29 +108,10 @@ userRouter.delete(
         if (!req.user.isRole(Role.Admin)) {
             return res.status(403).json({ message: 'unauthorized' });
         }
-
-        try {
-            // Log the input to make sure it's valid
-            console.log('--- DEBUGGING DELETE USER ---');
-            console.log('Attempting to delete user with ID:', req.params.userId);
-
-            await DB.deleteUser(req.params.userId);
-
-            console.log('User deleted successfully. Fetching new user list...');
-            const [users, more] = await DB.getUsers();
-
-            res.json({ users, more });
-
-        } catch (error) {
-            // This will print the exact database error to your pipeline logs
-            console.error('!!! ERROR IN DELETE USER ROUTE !!!', error);
-
-            // Re-throw the error so the asyncHandler can handle it as a 500
-            throw error;
-        }
+        await DB.deleteUser(req.params.userId);
+        const [users, more] = await DB.getUsers();
+        res.json({ users, more });
     })
-)
-
-// TODO: Add a middleware function somewhere to determine if someone has admin access to do admin things
+);
 
 module.exports = userRouter;
