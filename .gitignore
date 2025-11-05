@@ -9,3 +9,5 @@ dist
 /.idea/vcs.xml
 /scripts/generatePizzaData.sh
 /src/config.js
+/src/grafanaApiKey.js
+/scripts/basicGrafanaData.txt
