@@ -25,7 +25,7 @@ setInterval(() => {
     });
 
     sendMetricToGrafana(metrics);
-}, 10000);
+}, 1000 * 60 * 10); // Update grafana every 10 minutes, just for now when I don't actually need it
 
 function createMetric(metricName, metricValue, metricUnit, metricType, valueType, attributes) {
     attributes = { ...attributes, source: config.metrics.source };
