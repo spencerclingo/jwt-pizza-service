@@ -59,6 +59,11 @@ jobs:
               name: '${{ secrets.ADMIN_NAME }}',
               email: '${{ secrets.ADMIN_EMAIL }}',
               password: '${{ secrets.ADMIN_PASSWORD }}'
+            },
+            metrics: {
+              source: 'jwt-pizza-service',
+              url: '${{ secrets.METRICS_URL }}',
+              apiKey: '${{ secrets.METRICS_API_KEY }}',
             }
           };" > src/config.js
 

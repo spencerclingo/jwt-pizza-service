@@ -67,7 +67,8 @@ class DB {
     try {
       const userResult = await this.query(connection, `SELECT * FROM user WHERE email=?`, [email]);
       const user = userResult[0];
-      if (!user || (password && !(await bcrypt.compare(password, user.password)))) {
+      // Default setup allowed login with no password
+      if (!user || !password || !(await bcrypt.compare(password, user.password))) {
         throw new StatusCodeError('unknown user', 404);
       }
 
@@ -172,6 +173,7 @@ class DB {
       const orderId = orderResult.insertId;
       for (const item of order.items) {
         const menuId = await this.getID(connection, 'id', item.menuId, 'menu');
+        item.price = await this.query(connection, `SELECT price FROM menu WHERE menuId=?`, [menuId]); // If you can edit the price in the request, you can pay what you want
         await this.query(connection, `INSERT INTO orderItem (orderId, menuId, description, price) VALUES (?, ?, ?, ?)`, [orderId, menuId, item.description, item.price]);
       }
       return { ...order, id: orderId };
