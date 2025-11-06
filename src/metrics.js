@@ -1,8 +1,8 @@
 const config = require('./config');
 const os = require('os');
-const url = require("node:url");
 
 // Metrics stored in memory
+let allRequests = {};
 let requestMethods = {
     all: 0
 };
@@ -18,6 +18,12 @@ let requestCount = 0;
 let pizzaRequestLatency = 0;
 let pizzaRequestCount = 0;
 let chaosUrls = {};
+
+function allRequestTracker(req, res, next) {
+    const method = `[${req.method}] ${req.url}`;
+    allRequests[method] = (requestMethods[method] || 0) + 1;
+    next();
+}
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -193,4 +199,4 @@ async function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer };
+module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker };
