@@ -102,6 +102,9 @@ setInterval(() => {
     Object.keys(requestMethods).forEach((method) => {
         metrics.push(createMetric('requestMethods per Minute', requestMethods[method], '1', 'sum', 'asInt', { method }));
     });
+    Object.keys(allRequests).forEach((path) => {
+        metrics.push(createMetric('allRequests per minute', allRequests[path], '1', 'sum', 'asInt', { path }));
+    })
     Object.keys(authenticationAttempts).forEach((outcome) => {
         metrics.push(createMetric('authentications', authenticationAttempts[outcome], '1', 'sum', 'asInt', { outcome }));
     })
@@ -199,4 +202,4 @@ async function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker };
+module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker, urlToEndChaos };
