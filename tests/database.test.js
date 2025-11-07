@@ -10,7 +10,7 @@ const menuItem = {
 
 const adminUser = {
     password: "password",
-    name: "admin",
+    name: "admin_full_name_unique",
     email: "email",
     roles: [{ role: Role.Admin }],
 }
@@ -110,5 +110,5 @@ describe('Database Tests', function() {
         await db.logoutUser("this_token", connection);
         isFound = await db.isLoggedIn("this_token", connection);
         expect(isFound).toBe(false);
-    })
+    });
 })

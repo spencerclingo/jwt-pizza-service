@@ -67,8 +67,7 @@ class DB {
     try {
       const userResult = await this.query(connection, `SELECT * FROM user WHERE email=?`, [email]);
       const user = userResult[0];
-      // Default setup allowed login with no password
-      if (!user || !password || !(await bcrypt.compare(password, user.password))) {
+      if (!user || (password && !(await bcrypt.compare(password, user.password)))) {
         throw new StatusCodeError('unknown user', 404);
       }
 

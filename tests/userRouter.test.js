@@ -35,11 +35,12 @@ describe('userRouter tests', () => {
 
     it('delete user', async () => {
         const user = await DB.addUser(adminUser);
+        user.password = adminUser.password;
         const loginRes = await request(app).put('/api/auth').send(user);
 
         const userListRes = await request(app).delete(`/api/user/${user.id}`).set('Authorization', `Bearer ${loginRes.body.token}`).send();
 
         expect(userListRes.status).toBe(200);
-        expect(userListRes.body.users.map((user) => user.name)).not.toContain("admin_full_name_unique");
+        expect(userListRes.body.users.map((user) => user.name)).not.toContain(adminUser.name);
     })
 })

@@ -57,7 +57,7 @@ function pizzaCreationTimer(req, res, next) {
 }
 
 function addActiveUser(req, res, next) {
-    activeUsers.set(req.user.name, Date.now());
+    activeUsers.set(req.body.name, Date.now());
     next();
 }
 

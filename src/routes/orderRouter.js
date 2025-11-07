@@ -105,7 +105,6 @@ orderRouter.post(
                 incrementFailedPizzas(orderReq.items.size);
                 return;
             }
-            const start = process.hrtime.bigint();
             const order = await DB.addDinerOrder(req.user, orderReq);
             const r = await fetch(`${config.factory.url}/api/order`, {
                 method: 'POST',
