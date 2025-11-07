@@ -173,6 +173,7 @@ class DB {
       for (const item of order.items) {
         const menuId = await this.getID(connection, 'id', item.menuId, 'menu');
         item.price = await this.query(connection, `SELECT price FROM menu WHERE id=?`, [menuId]); // If you can edit the price in the request, you can pay what you want
+        item.price = item.price[0].price;
         await this.query(connection, `INSERT INTO orderItem (orderId, menuId, description, price) VALUES (?, ?, ?, ?)`, [orderId, menuId, item.description, item.price]);
       }
       return { ...order, id: orderId };
