@@ -94,7 +94,8 @@ function incrementFailedPizzas(failures) {
 }
 
 function urlToEndChaos(url) {
-    chaosUrls[url] = (chaosUrls[url] || 0) + 1;
+    const validUrl = url || "no_chaos";
+    chaosUrls[validUrl] = (chaosUrls[validUrl] || 0) + 1;
 }
 
 

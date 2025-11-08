@@ -102,7 +102,7 @@ orderRouter.post(
         try {
             if (orderReq.items.length > 20) {
                 res.status(500).send({message: 'The ovens are full, please order fewer pizzas.'});
-                incrementFailedPizzas(orderReq.items.size);
+                incrementFailedPizzas(orderReq.items.length);
                 return;
             }
             const order = await DB.addDinerOrder(req.user, orderReq);
@@ -124,10 +124,10 @@ orderRouter.post(
                     message: 'Failed to fulfill order at factory',
                     followLinkToEndChaos: j.reportUrl
                 });
-                incrementFailedPizzas(orderReq.items.size)
+                incrementFailedPizzas(orderReq.items.length)
             }
         } catch (e) {
-            incrementFailedPizzas(orderReq.items.size)
+            incrementFailedPizzas(orderReq.items.length)
             throw e;
         }
     })
