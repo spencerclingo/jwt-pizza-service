@@ -100,10 +100,10 @@ function urlToEndChaos(url) {
 setInterval(() => {
     const metrics = [];
     Object.keys(requestMethods).forEach((method) => {
-        metrics.push(createMetric('requestMethods per Minute', requestMethods[method], '1', 'sum', 'asInt', { method }));
+        metrics.push(createMetric('requestMethods_per_Minute', requestMethods[method], '1', 'sum', 'asInt', { method }));
     });
     Object.keys(allRequests).forEach((path) => {
-        metrics.push(createMetric('allRequests per minute', allRequests[path], '1', 'sum', 'asInt', { path }));
+        metrics.push(createMetric('allRequests_per_minute', allRequests[path], '1', 'sum', 'asInt', { path }));
     })
     Object.keys(authenticationAttempts).forEach((outcome) => {
         metrics.push(createMetric('authentications', authenticationAttempts[outcome], '1', 'sum', 'asInt', { outcome }));
