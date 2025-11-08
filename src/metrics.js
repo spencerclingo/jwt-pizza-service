@@ -21,7 +21,7 @@ let chaosUrls = {};
 
 function allRequestTracker(req, res, next) {
     const method = `[${req.method}] ${req.url}`;
-    allRequests[method] = (requestMethods[method] || 0) + 1;
+    allRequests[method] = (allRequests[method] || 0) + 1;
     next();
 }
 
