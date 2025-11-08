@@ -125,7 +125,7 @@ setInterval(() => {
     }
     if (pizzaRequestCount > 0) {
         const avgLatency = pizzaRequestLatency / pizzaRequestCount;
-        metrics.push(createMetric('request_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
+        metrics.push(createMetric('pizza_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
     }
 
     sendMetricToGrafana(metrics);
