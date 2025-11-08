@@ -20,7 +20,7 @@ let pizzaRequestCount = 0;
 let chaosUrls = {};
 
 function allRequestTracker(req, res, next) {
-    const method = `[${req.method}] ${req.url}`;
+    const method = `[${req.method}] ${req.path}`;
     allRequests[method] = (allRequests[method] || 0) + 1;
     next();
 }
@@ -57,7 +57,9 @@ function pizzaCreationTimer(req, res, next) {
 }
 
 function addActiveUser(req, res, next) {
-    activeUsers.set(req.body.name, Date.now());
+    if (req.body.name) {
+        activeUsers.set(req.body.name, Date.now());
+    }
     next();
 }
 
@@ -100,10 +102,10 @@ function urlToEndChaos(url) {
 setInterval(() => {
     const metrics = [];
     Object.keys(requestMethods).forEach((method) => {
-        metrics.push(createMetric('requestMethods_per_Minute', requestMethods[method], '1', 'sum', 'asInt', { method }));
+        metrics.push(createMetric('requestMethods_total', requestMethods[method], '1', 'sum', 'asInt', { method }));
     });
     Object.keys(allRequests).forEach((path) => {
-        metrics.push(createMetric('allRequests_per_minute', allRequests[path], '1', 'sum', 'asInt', { path }));
+        metrics.push(createMetric('allRequests_total', allRequests[path], '1', 'sum', 'asInt', { path }));
     })
     Object.keys(authenticationAttempts).forEach((outcome) => {
         metrics.push(createMetric('authentications', authenticationAttempts[outcome], '1', 'sum', 'asInt', { outcome }));
