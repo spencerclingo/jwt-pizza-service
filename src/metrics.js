@@ -18,6 +18,7 @@ let requestCount = 0;
 let pizzaRequestLatency = 0;
 let pizzaRequestCount = 0;
 let chaosUrls = {};
+let seeActiveUsers = false;
 
 function allRequestTracker(req, res, next) {
     const method = `[${req.method}] ${req.path}`;
@@ -57,10 +58,17 @@ function pizzaCreationTimer(req, res, next) {
 }
 
 function addActiveUser(req, res, next) {
-    if (req.body.user.name) {
-        activeUsers.set(req.body.user.name, Date.now());
+    if (req.body.name) {
+        activeUsers.set(req.body.name, Date.now());
+        if (seeActiveUsers) {
+            console.log(activeUsers)
+        }
     }
     next();
+}
+
+function lookAtActiveUsers() {
+    seeActiveUsers = !seeActiveUsers;
 }
 
 function authenticationAttempt(outcome) {
@@ -209,4 +217,4 @@ async function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker, urlToEndChaos };
+module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker, urlToEndChaos, lookAtActiveUsers };

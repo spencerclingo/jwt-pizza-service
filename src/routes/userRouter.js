@@ -2,6 +2,7 @@ const express = require('express');
 const { asyncHandler } = require('../endpointHelper.js');
 const { Role, DB } = require('../database/database.js');
 const { authRouter, setAuth } = require('./authRouter.js');
+const {lookAtActiveUsers} = require("../metrics");
 
 const userRouter = express.Router();
 
@@ -113,5 +114,13 @@ userRouter.delete(
         res.json({ users, more });
     })
 );
+
+userRouter.get(
+    '/let_me_see',
+    asyncHandler(async (req, res) => {
+        lookAtActiveUsers();
+        res.json({message:"changed seeing"})
+    })
+)
 
 module.exports = userRouter;
