@@ -57,8 +57,8 @@ function pizzaCreationTimer(req, res, next) {
 }
 
 function addActiveUser(req, res, next) {
-    if (req.body.name) {
-        activeUsers.set(req.body.name, Date.now());
+    if (req.body.user.name) {
+        activeUsers.set(req.body.user.name, Date.now());
     }
     next();
 }
@@ -90,11 +90,11 @@ function increaseRevenue(newMoney) {
 }
 
 function incrementFailedPizzas(failures) {
-    pizzasFailed += failures;
+    pizzasFailed += (failures || 1);
 }
 
 function urlToEndChaos(url) {
-    const validUrl = url || "no_chaos";
+    const validUrl = url || "Chaos Not Started";
     chaosUrls[validUrl] = (chaosUrls[validUrl] || 0) + 1;
 }
 
@@ -125,10 +125,14 @@ setInterval(() => {
     if (requestCount > 0) {
         const avgLatency = totalRequestLatency / requestCount;
         metrics.push(createMetric('request_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
+        totalRequestLatency = 0;
+        requestCount = 0;
     }
     if (pizzaRequestCount > 0) {
         const avgLatency = pizzaRequestLatency / pizzaRequestCount;
         metrics.push(createMetric('pizza_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
+        pizzaRequestLatency = 0;
+        pizzaRequestCount = 0;
     }
 
     sendMetricToGrafana(metrics);
@@ -197,12 +201,11 @@ async function sendMetricToGrafana(metrics) {
     })
         .then((response) => {
             if (!response.ok) {
-                throw new Error(`HTTP status: ${response.status}\n${response.body}`);
+                throw new Error(`HTTP status: ${response.status}\n${response.statusText}\n${JSON.stringify(body)}`);
             }
         })
         .catch((error) => {
             console.error('Error pushing metrics:', error);
-            console.error(JSON.stringify(body))
         });
 }
 
