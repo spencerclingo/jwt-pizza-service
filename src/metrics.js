@@ -58,8 +58,8 @@ function pizzaCreationTimer(req, res, next) {
 }
 
 function addActiveUser(req, res, next) {
-    if (req.body.name) {
-        activeUsers.set(req.body.name, Date.now());
+    if (req.user && req.user.name) {
+        activeUsers.set(req.user.name, Date.now());
         if (seeActiveUsers) {
             console.log(activeUsers)
         }
