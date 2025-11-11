@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { Role, DB } = require('../database/database.js');
-const {authenticationAttempt} = require("../metrics");
+const {authenticationAttempt, toggleMetrics} = require("../metrics");
 
 const authRouter = express.Router();
 
@@ -100,6 +100,20 @@ authRouter.delete(
     await clearAuth(req);
     res.json({ message: 'logout successful' });
   })
+);
+
+authRouter.post(
+    '/toggleMetrics',
+    (req, res) => {
+        const { secret } = req.body;
+
+        if (!secret || secret !== config.metrics.secretKey) {
+            return res.status(404).json({ message: "unknown endpoint" });
+        }
+
+        let isRunning = toggleMetrics();
+        res.json({ message: `Metrics are now ${isRunning ? 'ON' : 'OFF'}` });
+    }
 );
 
 async function setAuth(user) {

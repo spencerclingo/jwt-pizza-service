@@ -19,6 +19,8 @@ let pizzaRequestLatency = 0;
 let pizzaRequestCount = 0;
 let chaosUrls = {};
 let seeActiveUsers = false;
+let updateMetricsTicker = null;
+let removeUsersTicker = null;
 
 function allRequestTracker(req, res, next) {
     const method = `[${req.method}] ${req.path}`;
@@ -106,59 +108,72 @@ function urlToEndChaos(url) {
     chaosUrls[validUrl] = (chaosUrls[validUrl] || 0) + 1;
 }
 
+function toggleMetrics() {
+    if (updateMetricsTicker) {
+        clearInterval(updateMetricsTicker);
+        clearInterval(removeUsersTicker);
+        updateMetricsTicker = null;
+        removeUsersTicker = null;
+    } else {
+        runMetrics()
+    }
+    return !!updateMetricsTicker;
+}
 
+function runMetrics() {
 // This will periodically send metrics to Grafana
-setInterval(() => {
-    const metrics = [];
-    Object.keys(requestMethods).forEach((method) => {
-        metrics.push(createMetric('requestMethods_total', requestMethods[method], '1', 'sum', 'asInt', { method }));
-    });
-    Object.keys(allRequests).forEach((path) => {
-        metrics.push(createMetric('allRequests_total', allRequests[path], '1', 'sum', 'asInt', { path }));
-    })
-    Object.keys(authenticationAttempts).forEach((outcome) => {
-        metrics.push(createMetric('authentications', authenticationAttempts[outcome], '1', 'sum', 'asInt', { outcome }));
-    })
-    Object.keys(pizzasSold).forEach((pizzaType) => {
-        metrics.push(createMetric('pizzasSold', pizzasSold[pizzaType], '1', 'sum', 'asInt', { pizzaType }));
-    });
-    Object.keys(chaosUrls).forEach((url) => {
-        metrics.push(createMetric('chaosUrl', chaosUrls[url], '1', 'sum', 'asInt', { url }));
-    })
-    metrics.push(createMetric('activeUsers', activeUsers.size, '1', 'gauge', 'asInt'));
-    metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), '%', 'gauge', 'asDouble'));
-    metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble'));
-    metrics.push(createMetric('revenue', revenue, '1', 'sum', 'asDouble'));
-    metrics.push(createMetric('failedPizzas', pizzasFailed, '1', 'sum', 'asInt'));
-    if (requestCount > 0) {
-        const avgLatency = totalRequestLatency / requestCount;
-        metrics.push(createMetric('request_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
-        totalRequestLatency = 0;
-        requestCount = 0;
-    }
-    if (pizzaRequestCount > 0) {
-        const avgLatency = pizzaRequestLatency / pizzaRequestCount;
-        metrics.push(createMetric('pizza_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
-        pizzaRequestLatency = 0;
-        pizzaRequestCount = 0;
-    }
-
-    sendMetricToGrafana(metrics);
-}, 1000 * 10); // Update grafana every 10 seconds
-
-const USER_TIMEOUT_MS = 1000 * 60 * 15; // 15 minutes
-setInterval(() => {
-    const now = Date.now();
-
-    for (const [username, lastSeen] of activeUsers.entries()) {
-        if (now - lastSeen > USER_TIMEOUT_MS) {
-            activeUsers.delete(username);
+    updateMetricsTicker = setInterval(() => {
+        const metrics = [];
+        Object.keys(requestMethods).forEach((method) => {
+            metrics.push(createMetric('requestMethods_total', requestMethods[method], '1', 'sum', 'asInt', {method}));
+        });
+        Object.keys(allRequests).forEach((path) => {
+            metrics.push(createMetric('allRequests_total', allRequests[path], '1', 'sum', 'asInt', {path}));
+        })
+        Object.keys(authenticationAttempts).forEach((outcome) => {
+            metrics.push(createMetric('authentications', authenticationAttempts[outcome], '1', 'sum', 'asInt', {outcome}));
+        })
+        Object.keys(pizzasSold).forEach((pizzaType) => {
+            metrics.push(createMetric('pizzasSold', pizzasSold[pizzaType], '1', 'sum', 'asInt', {pizzaType}));
+        });
+        Object.keys(chaosUrls).forEach((url) => {
+            metrics.push(createMetric('chaosUrl', chaosUrls[url], '1', 'sum', 'asInt', {url}));
+        })
+        metrics.push(createMetric('activeUsers', activeUsers.size, '1', 'gauge', 'asInt'));
+        metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), '%', 'gauge', 'asDouble'));
+        metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), '%', 'gauge', 'asDouble'));
+        metrics.push(createMetric('revenue', revenue, '1', 'sum', 'asDouble'));
+        metrics.push(createMetric('failedPizzas', pizzasFailed, '1', 'sum', 'asInt'));
+        if (requestCount > 0) {
+            const avgLatency = totalRequestLatency / requestCount;
+            metrics.push(createMetric('request_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
+            totalRequestLatency = 0;
+            requestCount = 0;
         }
-    }
-}, 1000 * 60); // Every minute, active users who haven't hit an endpoint in 15 minutes are removed from active list
+        if (pizzaRequestCount > 0) {
+            const avgLatency = pizzaRequestLatency / pizzaRequestCount;
+            metrics.push(createMetric('pizza_latency_avg_ms', avgLatency, 'ms', 'gauge', 'asDouble'));
+            pizzaRequestLatency = 0;
+            pizzaRequestCount = 0;
+        }
+
+        sendMetricToGrafana(metrics);
+    }, 1000 * 10); // Update grafana every 10 seconds
+
+    const USER_TIMEOUT_MS = 1000 * 60 * 15; // 15 minutes
+    removeUsersTicker = setInterval(() => {
+        const now = Date.now();
+
+        for (const [username, lastSeen] of activeUsers.entries()) {
+            if (now - lastSeen > USER_TIMEOUT_MS) {
+                activeUsers.delete(username);
+            }
+        }
+    }, 1000 * 60); // Every minute, active users who haven't hit an endpoint in 15 minutes are removed from active list
+}
 
 function createMetric(metricName, metricValue, metricUnit, metricType, valueType, attributes) {
-    attributes = { ...attributes, source: config.metrics.source };
+    attributes = {...attributes, source: config.metrics.source};
 
     const metric = {
         name: metricName,
@@ -177,7 +192,7 @@ function createMetric(metricName, metricValue, metricUnit, metricType, valueType
     Object.keys(attributes).forEach((key) => {
         metric[metricType].dataPoints[0].attributes.push({
             key: key,
-            value: { stringValue: attributes[key] },
+            value: {stringValue: attributes[key]},
         });
     });
 
@@ -205,7 +220,7 @@ async function sendMetricToGrafana(metrics) {
     await fetch(`${config.metrics.url}`, {
         method: 'POST',
         body: JSON.stringify(body),
-        headers: { Authorization: `Bearer ${config.metrics.apiKey}`, 'Content-Type': 'application/json' },
+        headers: {Authorization: `Bearer ${config.metrics.apiKey}`, 'Content-Type': 'application/json'},
     })
         .then((response) => {
             if (!response.ok) {
@@ -217,4 +232,16 @@ async function sendMetricToGrafana(metrics) {
         });
 }
 
-module.exports = { requestTracker, addActiveUser, authenticationAttempt, increaseRevenue, incrementPizzasSold, incrementFailedPizzas, pizzaCreationTimer, allRequestTracker, urlToEndChaos, lookAtActiveUsers };
+module.exports = {
+    requestTracker,
+    addActiveUser,
+    authenticationAttempt,
+    increaseRevenue,
+    incrementPizzasSold,
+    incrementFailedPizzas,
+    pizzaCreationTimer,
+    allRequestTracker,
+    urlToEndChaos,
+    lookAtActiveUsers,
+    toggleMetrics
+};
