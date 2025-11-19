@@ -75,12 +75,12 @@ describe('Database Tests', function() {
     })
 
     it('getUser with bad email', async function() {
-        await expect(db.getUser("bad_email", "password", connection)).rejects.toThrow('unknown user');
+        await expect(db.getUser("bad_email", "password", connection)).rejects.toThrow('unauthorized');
     })
 
     it('getUser with bad password', async function() {
         await db.addUser(adminUser, connection);
-        await expect(db.getUser(adminUser.email, "bad_password", connection)).rejects.toThrow('unknown user');
+        await expect(db.getUser(adminUser.email, "bad_password", connection)).rejects.toThrow('unauthorized');
     })
 
     it('getUser with good information', async function() {
@@ -94,7 +94,7 @@ describe('Database Tests', function() {
     })
 
     it('updateUser with bad information', async function() {
-        await expect(db.updateUser(99, adminUser.name, "bad_email", adminUser.password, connection)).rejects.toThrow('unknown user');
+        await expect(db.updateUser(99, adminUser.name, "bad_email", adminUser.password, connection)).rejects.toThrow('unauthorized');
     })
 
     it('test if a non-existent user is logged in', async function() {
