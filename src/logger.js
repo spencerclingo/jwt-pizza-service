@@ -76,13 +76,15 @@ class Logger {
         res.on('finish', () => {
             const level = this.statusToLogLevel(res.statusCode);
 
+            const safeReqBody = this.sanitize(req.body);
+
             const logData = {
                 log: "http",
                 authorized: !!req.headers.authorization,
                 path: req.originalUrl,
                 method: req.method,
                 statusCode: res.statusCode,
-                reqBody: JSON.stringify(req.body),
+                reqBody: JSON.stringify(safeReqBody),
                 resBody: JSON.stringify(capturedBody),
             };
             this.log(level, 'http', logData);
