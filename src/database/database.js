@@ -108,7 +108,7 @@ class DB {
       values.push(userId);
       if (params.length > 0) {
         // This line was susceptible to SQL injection by setting userId = "1 OR 1=1" to update all users
-        await this.query(connection, `UPDATE user SET ${params.join(', ')} WHERE id=?`, values);
+        await this.query(connection, `UPDATE user SET ${params.join(', ')} WHERE id=?`, values, !!password ? 0 : -1);
       }
       return this.getUser(email, password); // Don't pass a connection because this queries instead of updates
     } finally {
@@ -370,8 +370,8 @@ class DB {
     return '';
   }
 
-  async query(connection, sql, params) {
-    logger.dbLogger(sql);
+  async query(connection, sql, params, password_index = -1) {
+    logger.dbLogger(sql, params, password_index);
     const [results] = await connection.execute(sql, params);
     return results;
   }

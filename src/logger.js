@@ -93,10 +93,14 @@ class Logger {
         next();
     };
 
-    dbLogger(query) {
+    dbLogger(query, params, password_index) {
+        if (password_index !== -1) {
+            params[password_index] = "******* REDACTED";
+        }
         const log = {
             log: "db",
-            query: query
+            query: query,
+            params: params
         }
         this.log('info', 'db', log);
     }
