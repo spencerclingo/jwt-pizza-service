@@ -4,6 +4,8 @@ const {Role, DB} = require('../database/database.js');
 const {authRouter} = require('./authRouter.js');
 const {asyncHandler, StatusCodeError} = require('../endpointHelper.js');
 const {incrementPizzasSold, increaseRevenue, incrementFailedPizzas, pizzaCreationTimer, urlToEndChaos} = require("../metrics");
+const Logger = require('../logger.js');
+const logger = new Logger(config);
 
 const orderRouter = express.Router();
 
@@ -106,12 +108,15 @@ orderRouter.post(
                 return;
             }
             const order = await DB.addDinerOrder(req.user, orderReq);
+            const orderInfo = { diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order };
+            logger.factoryLogger({ type: 'request', data: orderInfo });
             const r = await fetch(`${config.factory.url}/api/order`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}`},
-                body: JSON.stringify({diner: {id: req.user.id, name: req.user.name, email: req.user.email}, order}),
+                body: JSON.stringify(orderInfo),
             });
             const j = await r.json();
+            logger.factoryLogger({ type: 'response', statusCode: r.status, data: j });
             urlToEndChaos(j.reportUrl);
             if (r.ok) {
                 res.send({order, followLinkToEndChaos: j.reportUrl, jwt: j.jwt});

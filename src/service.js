@@ -6,9 +6,12 @@ const userRouter = require('./routes/userRouter.js');
 const version = require('./version.json');
 const config = require('./config.js');
 const { requestTracker, addActiveUser, allRequestTracker } = require('./metrics');
+const Logger = require('./logger.js');
+const logger = new Logger(config);
 
 const app = express();
 app.use(express.json());
+app.use(logger.httpLogger);
 app.use(setAuthUser);
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -51,8 +54,17 @@ app.use('*', (req, res) => {
 
 // Default error handler for all exceptions and errors.
 app.use((err, req, res, next) => {
-  res.status(err.statusCode ?? 500).json({ message: err.message, stack: err.stack });
-  next();
+  logger.unhandledErrorLogger(err);
+  const statusCode = err.statusCode ||
+      err.status ||
+      500;
+
+  res.status(statusCode).json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+
+  next()
 });
 
 module.exports = app;
