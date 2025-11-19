@@ -134,7 +134,7 @@ class Logger {
             }
 
             for (const key in obj) {
-                if (obj.hasOwnProperty(key)) {
+                if (Object.hasOwn(obj, key)) {
                     if (sensitiveKeys.includes(key.toLowerCase())) {
                         obj[key] = '***** (REDACTED)';
                     } else if (typeof obj[key] === 'object') {
