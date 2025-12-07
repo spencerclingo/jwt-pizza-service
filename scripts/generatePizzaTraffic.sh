@@ -11,7 +11,7 @@ host=$1
 # Trap SIGINT (Ctrl+C) to execute the cleanup function
 cleanup() {
   echo "Terminating background processes..."
-  kill $pid1 $pid2 $pid3 $pid4 $pid5 $pid6 $pid7 $pid8
+  kill $pid1 $pid2 $pid3 $pid4 $pid5 $pid6 $pid7 $pid8 $pid9
   exit 0
 }
 trap cleanup SIGINT
@@ -69,21 +69,32 @@ done &
 pid4=$!
 
 # Simulate a failed pizza order every 5 minutes
+#while true; do
+#  token=$(login "d@jwt.com" "diner")
+#  echo "Login hungry diner..." $( [ -z "$token" ] && echo "false" || echo "true" )
+#
+#  items='{ "menuId": 1, "description": "Veggie", "price": 0.05 }'
+#  for (( i=0; i < 21; i++ ))
+#  do items+=', { "menuId": 1, "description": "Veggie", "price": 0.05 }'
+#  done
+#
+#  result=$(execute_curl "-X POST $host/api/order -H 'Content-Type: application/json' -d '{\"franchiseId\": 1, \"storeId\":1, \"items\":[$items]}'  -H \"Authorization: Bearer $token\"")
+#  echo "Bought too many pizzas..." $result
+#  sleep 5
+#  result=$(execute_curl "-X DELETE $host/api/auth -H \"Authorization: Bearer $token\"")
+#  echo "Logging out hungry diner..." $result
+#  sleep 295
+#done &
+#pid5=$!
 while true; do
   token=$(login "d@jwt.com" "diner")
-  echo "Login hungry diner..." $( [ -z "$token" ] && echo "false" || echo "true" )
-
-  items='{ "menuId": 1, "description": "Veggie", "price": 0.05 }'
-  for (( i=0; i < 21; i++ ))
-  do items+=', { "menuId": 1, "description": "Veggie", "price": 0.05 }'
-  done
-  
-  result=$(execute_curl "-X POST $host/api/order -H 'Content-Type: application/json' -d '{\"franchiseId\": 1, \"storeId\":1, \"items\":[$items]}'  -H \"Authorization: Bearer $token\"")
-  echo "Bought too many pizzas..." $result  
-  sleep 5
+  echo "Login diner..." $( [ -z "$token" ] && echo "false" || echo "true" )
+  result=$(execute_curl "-X POST $host/api/order -H 'Content-Type: application/json' -d '{\"franchiseId\": 1, \"storeId\":1, \"items\":[{ \"menuId\": 2, \"description\": \"Pepperoni\", \"price\": 0.05 }]}'  -H \"Authorization: Bearer $token\"")
+  echo "Bought a pizza..." $result
+  sleep 13
   result=$(execute_curl "-X DELETE $host/api/auth -H \"Authorization: Bearer $token\"")
-  echo "Logging out hungry diner..." $result
-  sleep 295
+  echo "Logging out diner..." $result
+  sleep 10
 done &
 pid5=$!
 
@@ -126,6 +137,18 @@ while true; do
 done &
 pid8=$!
 
+while true; do
+  token=$(login "d@jwt.com" "diner")
+  echo "Login diner..." $( [ -z "$token" ] && echo "false" || echo "true" )
+  result=$(execute_curl "-X POST $host/api/order -H 'Content-Type: application/json' -d '{\"franchiseId\": 1, \"storeId\":1, \"items\":[{ \"menuId\": 2, \"description\": \"Pepperoni\", \"price\": 0.05 }]}'  -H \"Authorization: Bearer $token\"")
+  echo "Bought a pizza..." $result
+  sleep 5
+  result=$(execute_curl "-X DELETE $host/api/auth -H \"Authorization: Bearer $token\"")
+  echo "Logging out diner..." $result
+  sleep 2
+done &
+pid9=$!
+
 
 # Wait for the background processes to complete
-wait $pid1 $pid2 $pid3 $pid4 $pid5 $pid6 $pid7 $pid8
+wait $pid1 $pid2 $pid3 $pid4 $pid5 $pid6 $pid7 $pid8 $pid9

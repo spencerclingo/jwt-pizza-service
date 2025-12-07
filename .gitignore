@@ -12,3 +12,8 @@ dist
 /src/grafanaApiKey.js
 /scripts/basicGrafanaData.txt
 /scripts/toggleMetrics.txt
+/.idea/dataSources.xml
+/scripts/enableChaos.sh
+/.idea/jsLibraryMappings.xml
+/.idea/sqldialects.xml
+/scripts/enableChaos.sh

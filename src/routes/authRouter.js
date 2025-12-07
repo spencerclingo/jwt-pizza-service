@@ -81,6 +81,9 @@ authRouter.put(
     const { email, password } = req.body;
     let user;
     try {
+      if (!password || !email || password === "") {
+          throw { message: 'invalid email or password' };
+      }
       user = await DB.getUser(email, password);
       authenticationAttempt("success");
     } catch (e) {
